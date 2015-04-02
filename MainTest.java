@@ -9,6 +9,8 @@ import expression.TripleExpression;
 
 public class MainTest {
 
+
+    //GG
     public static void main(String[] args) {
         Parser parser = new CheckedParser();
         TripleExpression expression;
