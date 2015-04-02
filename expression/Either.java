@@ -6,6 +6,14 @@ import java.util.function.Function;
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)
  */
 public interface Either<L, R> {
+    <NR> Either<L, NR> mapRight(final Function<? super R, ? extends NR> f);
+    <NR> Either<L, NR> flatMapRight(final Function<? super R, ? extends Either<L, NR>> f);
+
+    boolean isLeft();
+
+    L getLeft();
+    R getRight();
+
     public static <L, R> Either<L, R> right(final R value) {
         return new Right<>(value);
     }
@@ -13,16 +21,6 @@ public interface Either<L, R> {
     static <L, R> Either<L, R> left(final L value) {
         return new Left<>(value);
     }
-
-    <NR> Either<L, NR> mapRight(final Function<? super R, ? extends NR> f);
-
-    <NR> Either<L, NR> flatMapRight(final Function<? super R, ? extends Either<L, NR>> f);
-
-    boolean isLeft();
-
-    L getLeft();
-
-    R getRight();
 
     public class Left<L, R> implements Either<L, R> {
         private final L value;
@@ -32,7 +30,7 @@ public interface Either<L, R> {
         }
 
         @Override
-        public <NR> Either<L, NR> mapRight(final Function<? super R, ? extends NR> f) {
+        public <NR> Either<L, NR> mapRight(final  Function<? super R, ? extends NR> f) {
             return new Left<>(value);
         }
 
@@ -65,7 +63,7 @@ public interface Either<L, R> {
         }
 
         @Override
-        public <NR> Either<L, NR> mapRight(final Function<? super R, ? extends NR> f) {
+        public <NR> Either<L, NR> mapRight(final  Function<? super R, ? extends NR> f) {
             return new Right<>(f.apply(value));
         }
 

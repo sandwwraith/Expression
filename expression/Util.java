@@ -14,8 +14,7 @@ public class Util {
     public static final Random RNG = new Random(58L);
 
     // Utility class
-    private Util() {
-    }
+    private Util() {}
 
     public static void assertTrue(final String message, final boolean condition) {
         assert condition : message;
@@ -59,14 +58,10 @@ public class Util {
         return new ArrayList<>(Arrays.asList(items));
     }
 
-    static void addRange(final List<Integer> values, final int d, final int c) {
+    public static void addRange(final List<Integer> values, final int d, final int c) {
         for (int i = -d; i <= d; i++) {
             values.add(c + i);
         }
-    }
-
-    public static <T> Op<T> op(final String name, final T f) {
-        return new Op<>(name, f);
     }
 
     public static final class Op<T> {
@@ -77,5 +72,9 @@ public class Util {
             this.name = name;
             this.f = f;
         }
+    }
+
+    public static <T> Op<T> op(final String name, final T f) {
+        return new Op<>(name, f);
     }
 }

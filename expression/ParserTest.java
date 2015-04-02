@@ -13,10 +13,13 @@ import static expression.Util.*;
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)
  */
 public class ParserTest {
-    static long total;
     protected final List<Op<UnaryOperator<Long>>> unary = new ArrayList<>();
     protected final List<List<Op<BinaryOperator<Long>>>> levels = new ArrayList<>();
     protected List<Op<TExpression>> tests;
+
+    public enum Reason {
+        DBZ, OVERFLOW
+    }
 
     protected ParserTest() {
         unary.add(op("-", a -> -a));
@@ -50,27 +53,13 @@ public class ParserTest {
         );
     }
 
+    public interface TExpression {
+        Long evaluate(long x, long y, long z);
+    }
+
     public static void main(final String[] args) {
         checkAssert(ParserTest.class);
         new ParserTest().test();
-    }
-
-    private static Test constOrVariable(final int[] vars) {
-        if (RNG.nextBoolean()) {
-            final int id = randomInt(3);
-            return new Test("xyz".charAt(id) + "", Either.right(vars[id]));
-        } else {
-            final int value = RNG.nextInt();
-            return new Test(value + "", Either.right(value));
-        }
-    }
-
-    private static Test p(final Test t) {
-        return new Test("(" + t.expr + ")", t.answer);
-    }
-
-    private static boolean makeNewBranch(final int depth, final int coefficient) {
-        return randomInt(depth + coefficient) < coefficient;
     }
 
     protected void test() {
@@ -80,7 +69,7 @@ public class ParserTest {
             for (int i = 0; i < 10; i++) {
                 for (int j = 0; j < 10; j++) {
                     for (int k = 0; k < 10; k++) {
-                        check(new int[] {i, j, k}, expression, lift(test.f.evaluate(i, j, k)));
+                        check(new int[]{i, j, k}, expression, lift(test.f.evaluate(i, j, k)));
                     }
                 }
             }
@@ -107,7 +96,7 @@ public class ParserTest {
             if (i % 100 == 0) {
                 System.out.println("Completed " + i + " out of " + n);
             }
-            final int[] vars = new int[] {RNG.nextInt(), RNG.nextInt(), RNG.nextInt()};
+            final int[] vars = new int[]{RNG.nextInt(), RNG.nextInt(), RNG.nextInt()};
 
             final Test test = f.apply(vars, i);
             try {
@@ -120,11 +109,13 @@ public class ParserTest {
         }
     }
 
+    static long total;
+
     private void check(final int[] vars, final TripleExpression expression, final Either<Reason, Integer> answer) {
         try {
             final int actual = expression.evaluate(vars[0], vars[1], vars[2]);
             assertTrue(String.format("Error expected x = %d, y=%d, z=%d", vars[0], vars[1], vars[2]), !answer.isLeft());
-            assertEquals(String.format("f(%d, %d, %d)", vars[0], vars[1], vars[2]), actual, answer.getRight());
+            assertEquals(String.format("f(%d, %d, %d)\n%s", vars[0], vars[1], vars[2], expression), actual, answer.getRight());
         } catch (final Exception e) {
             if (!answer.isLeft()) {
                 throw new AssertionError(String.format("No error expected for x = %d, y=%d, z=%d", vars[0], vars[1], vars[2]), e);
@@ -139,12 +130,10 @@ public class ParserTest {
         final int operator = randomInt(6);
         if (operator <= 0) {
             return genP(vars, depth);
+        } else if (operator <= 1) {
+            return unary(genP(vars, depth));
         } else {
-            if (operator <= 1) {
-                return unary(genP(vars, depth));
-            } else {
-                return binary(random(levels), genP(vars, depth), genP(vars, depth));
-            }
+            return binary(random(levels), genP(vars, depth), genP(vars, depth));
         }
     }
 
@@ -152,15 +141,23 @@ public class ParserTest {
         return p(generate(vars, randomInt(depth)));
     }
 
+    private static Test constOrVariable(final int[] vars) {
+        if (RNG.nextBoolean()) {
+            final int id = randomInt(3);
+            return new Test("xyz".charAt(id) + "", Either.right(vars[id]));
+        } else {
+            final int value = RNG.nextInt();
+            return new Test(value + "", Either.right(value));
+        }
+    }
+
     private Test genExpression(final int depth, final int coefficient, final int[] vars, final int level) {
         if (level == levels.size()) {
             return genFactor(depth, coefficient, vars);
+        } else if (makeNewBranch(depth, coefficient)) {
+            return binary(levels.get(level), genExpression(depth + 1, coefficient, vars, level), genExpression(depth, coefficient, vars, level + 1));
         } else {
-            if (makeNewBranch(depth, coefficient)) {
-                return binary(levels.get(level), genExpression(depth + 1, coefficient, vars, level), genExpression(depth, coefficient, vars, level + 1));
-            } else {
-                return genExpression(depth, coefficient, vars, level + 1);
-            }
+            return genExpression(depth, coefficient, vars, level + 1);
         }
     }
 
@@ -170,6 +167,10 @@ public class ParserTest {
         } else {
             return genValue(depth, coefficient, vars);
         }
+    }
+
+    private static Test p(final Test t) {
+        return new Test("("  + t.expr + ")", t.answer);
     }
 
     private Test binary(final List<Op<BinaryOperator<Long>>> ops, final Test t1, final Test t2) {
@@ -193,16 +194,12 @@ public class ParserTest {
         }
     }
 
+    private static boolean makeNewBranch(final int depth, final int coefficient) {
+        return randomInt(depth + coefficient) < coefficient;
+    }
+
     protected Either<Reason, Integer> lift(final Long value) {
         return value != null ? Either.right(value.intValue()) : Either.left(Reason.DBZ);
-    }
-
-    public enum Reason {
-        DBZ, OVERFLOW
-    }
-
-    public interface TExpression {
-        Long evaluate(long x, long y, long z);
     }
 
     public static class Test {
