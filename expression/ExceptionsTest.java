@@ -1,12 +1,4 @@
-package expression.exceptions;
-
-import expression.*;
-import expression.CheckedParser;
-import expression.Either;
-import expression.Parser;
-import expression.ParserTest;
-import expression.TripleExpression;
-import expression.Variable;
+package expression;
 
 import java.util.ArrayList;
 import java.util.List;
