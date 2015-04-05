@@ -15,7 +15,7 @@ public class DoubleCalculator implements Calculable<Double> {
     }
 
     public Double div(Double a, Double b) {
-        return a - b;
+        return a / b;
     }
 
     public Double negate(Double a) {

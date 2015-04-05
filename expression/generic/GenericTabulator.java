@@ -11,8 +11,6 @@ import java.math.BigInteger;
 public class GenericTabulator implements Tabulator {
     private enum EvalType {Int, Double, BigInt}
 
-    ;
-
     private EvalType parseEvalType(String s) {
         if (s.equals("i")) {
             return EvalType.Int;
@@ -22,6 +20,7 @@ public class GenericTabulator implements Tabulator {
         }
         return EvalType.BigInt;
     }
+
     @Override
     public Object[][][] tabulate(String mode, String expression, int x1, int x2, int y1, int y2, int z1, int z2) throws Exception {
         EvalType calc = parseEvalType(mode);
@@ -51,7 +50,7 @@ public class GenericTabulator implements Tabulator {
                     } catch (EvaluateException e) {
                         res = null;
                     }
-                    mass[x][y][z] = res;
+                    mass[x - x1][y - y1][z - z1] = res;
                 }
             }
         }

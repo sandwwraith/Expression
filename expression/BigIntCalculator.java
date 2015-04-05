@@ -31,6 +31,12 @@ public class BigIntCalculator implements Calculable<BigInteger> {
     }
 
     public BigInteger extractConst(String s) {
-        return new BigInteger(s);
+        BigInteger num;
+        try {
+            num = new BigInteger(s);
+        } catch (NumberFormatException e) {
+            throw new IncorrectConstException(s);
+        }
+        return num;
     }
 }

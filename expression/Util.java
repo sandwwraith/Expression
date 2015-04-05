@@ -14,7 +14,8 @@ public class Util {
     public static final Random RNG = new Random(58L);
 
     // Utility class
-    private Util() {}
+    private Util() {
+    }
 
     public static void assertTrue(final String message, final boolean condition) {
         assert condition : message;

@@ -107,7 +107,9 @@ public class GenericTest {
                         expected = null;
                     }
                     final Object actual = result[x - x1][y - y1][z - z1];
-                    assert expected == null ? actual == null : expected.equals(actual) : String.format("table[%d][%d][%d] = %s", x - x1, y - y1, z - z1, actual);
+                    assert expected == null ?
+                            actual == null :
+                            expected.equals(actual) : String.format("table[%d][%d][%d] = %s", x - x1, y - y1, z - z1, actual);
                 }
             }
         }
