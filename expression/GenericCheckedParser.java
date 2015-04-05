@@ -26,14 +26,14 @@ public class GenericCheckedParser implements Parser {
         return Character.isLetterOrDigit(ch) || isOperator(ch) || isVar(ch) || isBracket(ch);
     }
 
-    private void movenext() {
+    private void moveNext() {
         while (shift < line.length() && Character.isWhitespace(line.charAt(shift))) {
             shift++;
         }
     }
 
     private GenericTripleExpression getVar() throws ParserException {
-        movenext();
+        moveNext();
         String varName = line.substring(shift, shift + 1);
         if (!isVar(varName.charAt(0)) || (shift + 1 < line.length() && Character.isLetter(line.charAt(shift + 1)))) {
             throw new UnexpectedSymbolsException(shift, line.charAt(shift));
@@ -45,7 +45,7 @@ public class GenericCheckedParser implements Parser {
     }
 
     private GenericTripleExpression bracket() throws ParserException {
-        movenext();
+        moveNext();
         if (line.charAt(shift) == '(') {
             shift += 1;
             GenericTripleExpression res = priorityOne();
@@ -55,18 +55,18 @@ public class GenericCheckedParser implements Parser {
             shift++;
             return res;
         } else {
-            movenext();
+            moveNext();
             return getVar();
         }
     }
 
     private GenericTripleExpression unary() throws ParserException {// -
-        movenext();
+        moveNext();
         char op = line.charAt(shift);
         if (op == '-') {
             if (line.charAt(shift) == '-') {
                 shift++;
-                movenext();
+                moveNext();
                 return new GenericNegate(getNum());
             }
             /*if (line.charAt(shift) == 'a') {
@@ -75,7 +75,7 @@ public class GenericCheckedParser implements Parser {
                     throw new UnexpectedSymbolsException("Incorrect token");
                 }
                 shift += 3;
-                movenext();
+                moveNext();
                 return new CheckedAbsolute(getNum());
             }
             if (line.charAt(shift) == 's') {
@@ -84,7 +84,7 @@ public class GenericCheckedParser implements Parser {
                     throw new UnexpectedSymbolsException("Incorrect token");
                 }
                 shift += 4;
-                movenext();
+                moveNext();
                 return new CheckedSquareRoot(getNum());
             }*/
         }
@@ -92,7 +92,7 @@ public class GenericCheckedParser implements Parser {
     }
 
     private GenericTripleExpression getNum() throws ParserException {
-        movenext();
+        moveNext();
         int i = 0;
         boolean neg = false;
         if (line.charAt(shift) == '-') {
@@ -120,9 +120,9 @@ public class GenericCheckedParser implements Parser {
     }
 
     /*private TripleExpression priorityThree() throws ParserException { //Power | Log
-        movenext();
+        moveNext();
         TripleExpression current = getNum();
-        movenext();
+        moveNext();
         while (shift < line.length()) {
             char op = line.charAt(shift);
             char op2 = (shift + 1 < line.length()) ? line.charAt(shift + 1) : '?';
@@ -135,15 +135,15 @@ public class GenericCheckedParser implements Parser {
             } else {
                 current = new CheckedLog(current, getNum());
             }
-            movenext();
+            moveNext();
         }
         return current;
     }*/
 
     private GenericTripleExpression priorityTwo() throws ParserException { //Mul | Div
-        movenext();
+        moveNext();
         GenericTripleExpression current = getNum();
-        movenext();
+        moveNext();
         while (shift < line.length()) {
             char op = line.charAt(shift);
             char op2 = (shift + 1 < line.length()) ? line.charAt(shift + 1) : '?';
@@ -157,15 +157,15 @@ public class GenericCheckedParser implements Parser {
             } else {
                 current = new GenericDivide(current, getNum());
             }
-            movenext();
+            moveNext();
         }
         return current;
     }
 
     private GenericTripleExpression priorityOne() throws ParserException { //Plus | Minus
-        movenext();
+        moveNext();
         GenericTripleExpression current = priorityTwo();
-        movenext();
+        moveNext();
         while (shift < line.length()) {
             char op = line.charAt(shift);
             if (op != '+' && op != '-') {
@@ -177,7 +177,7 @@ public class GenericCheckedParser implements Parser {
             } else {
                 current = new GenericSubtract(current, priorityTwo());
             }
-            movenext();
+            moveNext();
         }
         return current;
     }
@@ -192,9 +192,9 @@ public class GenericCheckedParser implements Parser {
         } catch (StringIndexOutOfBoundsException e) {
             throw new UnexpectedSymbolsException("Unexpected end of string");
         }
-        movenext();
+        moveNext();
         if (shift < line.length()) {
-            throw new ParserException("Incorrect symbols from pos " + shift);
+            throw new UnexpectedSymbolsException(shift, line.charAt(shift));
         }
         return exp;
     }
