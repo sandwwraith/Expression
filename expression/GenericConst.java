@@ -11,7 +11,7 @@ public class GenericConst implements GenericTripleExpression {
         value = val;
     }
 
-    public <S, T extends Calculable<S>> S evaluate(S x, S y, S z, T calculator) {
+    public <S, T extends Calculator<S>> S evaluate(S x, S y, S z, T calculator) {
         return calculator.extractConst(value);
     }
 }

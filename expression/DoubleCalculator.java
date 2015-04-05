@@ -1,6 +1,6 @@
 package expression;
 
-public class DoubleCalculator implements Calculable<Double> {
+public class DoubleCalculator implements Calculator<Double> {
 
     public Double add(Double a, Double b) {
         return a + b;

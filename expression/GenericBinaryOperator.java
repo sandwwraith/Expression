@@ -13,9 +13,9 @@ public abstract class GenericBinaryOperator implements GenericTripleExpression {
         operand2 = op2;
     }
 
-    protected abstract <S, T extends Calculable<S>> S calc(S a, S b, T calculator);
+    protected abstract <S, T extends Calculator<S>> S calc(S a, S b, T calculator);
 
-    public <S, T extends Calculable<S>> S evaluate(S x, S y, S z, T calculator) {
+    public <S, T extends Calculator<S>> S evaluate(S x, S y, S z, T calculator) {
         return calc(operand1.evaluate(x, y, z, calculator), operand2.evaluate(x, y, z, calculator), calculator);
     }
 

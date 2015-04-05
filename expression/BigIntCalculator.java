@@ -6,7 +6,7 @@ import java.math.BigInteger;
  * Created by sandwwraith(@gmail.com)
  * on Апр..2015
  */
-public class BigIntCalculator implements Calculable<BigInteger> {
+public class BigIntCalculator implements Calculator<BigInteger> {
     public BigInteger add(BigInteger a, BigInteger b) {
         return a.add(b);
     }

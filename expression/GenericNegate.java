@@ -9,7 +9,7 @@ public class GenericNegate extends GenericUnaryOperator implements GenericTriple
         super(exp);
     }
 
-    protected <S, T extends Calculable<S>> S calc(S a, T calculator) {
+    protected <S, T extends Calculator<S>> S calc(S a, T calculator) {
         return calculator.negate(a);
     }
 }

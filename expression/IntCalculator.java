@@ -1,6 +1,6 @@
 package expression;
 
-public class IntCalculator implements Calculable<Integer> {
+public class IntCalculator implements Calculator<Integer> {
 
     public Integer add(Integer x, Integer y) {
         if ((x > 0 && y > 0 && (Integer.MAX_VALUE - x < y)) || (x < 0 && y < 0 && (Integer.MIN_VALUE - x > y))) {

@@ -11,7 +11,7 @@ public class GenericVariable implements GenericTripleExpression {
         name = t;
     }
 
-    public <S, T extends Calculable<S>> S evaluate(S x, S y, S z, T calculator) {
+    public <S, T extends Calculator<S>> S evaluate(S x, S y, S z, T calculator) {
         if (name.equals("x")) {
             return x;
         }
