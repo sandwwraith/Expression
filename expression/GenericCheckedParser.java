@@ -4,7 +4,7 @@ package expression;
  * Created by sandwwraith(@gmail.com)
  * on Март.2015
  */
-public class CheckedParser implements Parser {
+public class GenericCheckedParser implements Parser {
 
     //private static final TripleExpression NEGATE = new Const(-1);
     private String line;
@@ -26,59 +26,29 @@ public class CheckedParser implements Parser {
         return Character.isLetterOrDigit(ch) || isOperator(ch) || isVar(ch) || isBracket(ch);
     }
 
-    private static String filterString(String input) throws ParserException {
-        StringBuilder res = new StringBuilder("");
-        int balance = 0;
-
-        for (int i = 0; i < input.length(); i++) {
-            char c = input.charAt(i);
-            if (isValidToken(c)) {
-                res.append(c);
-                if (c == '(') {
-                    balance++;
-                }
-                if (c == ')') {
-                    balance--;
-                }
-                if (balance < 0) {
-                    throw new UnbalancedBracketsException();
-                }
-                continue;
-            }
-            if (!Character.isWhitespace(c)) {
-                throw new UnexpectedSymbolsException(i, c);
-            }
-        }
-        if (balance != 0) {
-            throw new UnbalancedBracketsException();
-        }
-
-        return res.toString();
-    }
-
     private void movenext() {
         while (shift < line.length() && Character.isWhitespace(line.charAt(shift))) {
             shift++;
         }
     }
 
-    private TripleExpression getVar() throws ParserException {
+    private GenericTripleExpression getVar() throws ParserException {
         movenext();
         String varName = line.substring(shift, shift + 1);
         if (!isVar(varName.charAt(0)) || (shift + 1 < line.length() && Character.isLetter(line.charAt(shift + 1)))) {
             throw new UnexpectedSymbolsException("Incorrect token at pos " + shift);
         } else {
-            TripleExpression res = new Variable(varName);
+            GenericTripleExpression res = new GenericVariable(varName);
             shift++;
             return res;
         }
     }
 
-    private TripleExpression bracket() throws ParserException {
+    private GenericTripleExpression bracket() throws ParserException {
         movenext();
         if (line.charAt(shift) == '(') {
             shift += 1;
-            TripleExpression res = priorityOne();
+            GenericTripleExpression res = priorityOne();
             if (line.charAt(shift) != ')') {
                 throw new UnbalancedBracketsException("Expected closing bracket at pos " + shift);
             }
@@ -90,16 +60,16 @@ public class CheckedParser implements Parser {
         }
     }
 
-    private TripleExpression unary() throws ParserException {// -
+    private GenericTripleExpression unary() throws ParserException {// -
         movenext();
         char op = line.charAt(shift);
-        if (op == '-' || op == 'a' || op == 's') {
+        if (op == '-') {
             if (line.charAt(shift) == '-') {
                 shift++;
                 movenext();
-                return new CheckedNegate(getNum());
+                return new GenericNegate(getNum());
             }
-            if (line.charAt(shift) == 'a') {
+            /*if (line.charAt(shift) == 'a') {
                 String abs = line.substring(shift, shift + 3);
                 if (!abs.equals("abs")) {
                     throw new UnexpectedSymbolsException("Incorrect token");
@@ -116,12 +86,12 @@ public class CheckedParser implements Parser {
                 shift += 4;
                 movenext();
                 return new CheckedSquareRoot(getNum());
-            }
+            }*/
         }
         return bracket();
     }
 
-    private TripleExpression getNum() throws ParserException {
+    private GenericTripleExpression getNum() throws ParserException {
         movenext();
         int i = 0;
         boolean neg = false;
@@ -137,17 +107,18 @@ public class CheckedParser implements Parser {
             //nothing found, go next
             return unary();
         }
-        int num;
+        /*int num;
         try {
             num = Integer.parseInt(line.substring(shift, i + shift));
         } catch (NumberFormatException e) {
             throw new ParserException(line.substring(shift, i + shift) + " is not a valid Integer number");
         }
-        shift += i;
-        return new Const(num);
+        shift += i;*/
+        String num = line.substring(shift, i + shift);
+        return new GenericConst(num);
     }
 
-    private TripleExpression priorityThree() throws ParserException { //Power | Log
+    /*private TripleExpression priorityThree() throws ParserException { //Power | Log
         movenext();
         TripleExpression current = getNum();
         movenext();
@@ -166,11 +137,11 @@ public class CheckedParser implements Parser {
             movenext();
         }
         return current;
-    }
+    }*/
 
-    private TripleExpression priorityTwo() throws ParserException { //Mul | Div
+    private GenericTripleExpression priorityTwo() throws ParserException { //Mul | Div
         movenext();
-        TripleExpression current = priorityThree();
+        GenericTripleExpression current = getNum();
         movenext();
         while (shift < line.length()) {
             char op = line.charAt(shift);
@@ -181,18 +152,18 @@ public class CheckedParser implements Parser {
             }
             shift += 1;
             if (op == '*') {
-                current = new CheckedMultiply(current, priorityThree());
+                current = new GenericMultiply(current, getNum());
             } else {
-                current = new CheckedDivide(current, priorityThree());
+                current = new GenericDivide(current, getNum());
             }
             movenext();
         }
         return current;
     }
 
-    private TripleExpression priorityOne() throws ParserException { //Plus | Minus
+    private GenericTripleExpression priorityOne() throws ParserException { //Plus | Minus
         movenext();
-        TripleExpression current = priorityTwo();
+        GenericTripleExpression current = priorityTwo();
         movenext();
         while (shift < line.length()) {
             char op = line.charAt(shift);
@@ -201,20 +172,20 @@ public class CheckedParser implements Parser {
             }
             shift += 1;
             if (op == '+') {
-                current = new CheckedAdd(current, priorityTwo());
+                current = new GenericAdd(current, priorityTwo());
             } else {
-                current = new CheckedSubtract(current, priorityTwo());
+                current = new GenericSubtract(current, priorityTwo());
             }
             movenext();
         }
         return current;
     }
 
-    public TripleExpression parse(String expression) throws ParserException {
+    public GenericTripleExpression parse(String expression) throws ParserException {
         // expression = filterString(expression);
         line = expression;
         shift = 0;
-        TripleExpression exp;
+        GenericTripleExpression exp;
         try {
             exp = priorityOne();
         } catch (StringIndexOutOfBoundsException e) {

@@ -4,23 +4,21 @@ package expression;
  * Created by sandwwraith(@gmail.com)
  * on Март.2015
  */
-public class Variable implements TripleExpression {
+public class GenericVariable implements GenericTripleExpression {
     private final String name;
 
-    public Variable(String t) {
+    public GenericVariable(String t) {
         name = t;
     }
 
-    public int evaluate(int x, int y, int z) {
+    public <S, T extends Calculable<S>> S evaluate(S x, S y, S z, T calculator) {
         if (name.equals("x")) {
             return x;
         }
         if (name.equals("y")) {
             return y;
-        }
-        if (name.equals("z")) {
+        } else {
             return z;
         }
-        return -1;
     }
 }

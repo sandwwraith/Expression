@@ -27,3 +27,9 @@ class NegativeSquareRootException extends EvaluateException {
         super("Square root from negative number");
     }
 }
+
+class IncorrectConstException extends EvaluateException {
+    public IncorrectConstException(String s) {
+        super(s + " is a not valid constant for this evaluating type");
+    }
+}
