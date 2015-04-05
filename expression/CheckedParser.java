@@ -66,7 +66,7 @@ public class CheckedParser implements Parser {
         movenext();
         String varName = line.substring(shift, shift + 1);
         if (!isVar(varName.charAt(0)) || (shift + 1 < line.length() && Character.isLetter(line.charAt(shift + 1)))) {
-            throw new UnexpectedSymbolsException("Incorrect token at pos " + shift);
+            throw new UnexpectedSymbolsException(shift,line.charAt(shift));
         } else {
             TripleExpression res = new Variable(varName);
             shift++;
@@ -222,7 +222,7 @@ public class CheckedParser implements Parser {
         }
         movenext();
         if (shift < line.length()) {
-            throw new ParserException("Cannot parse rest of string from pos " + shift);
+            throw new ParserException("Incorrect symbols from pos " + shift);
         }
         return exp;
     }

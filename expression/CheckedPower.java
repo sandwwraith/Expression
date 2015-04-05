@@ -17,24 +17,6 @@ public class CheckedPower extends BinaryOperator {
         return z;
     }*/
 
-    private int power(int a, int n) {
-        int r = 1;
-        while (n != 0) {
-            if (n % 2 == 1) {
-                //r *= a;
-                r = MultyCheck(r, a);
-                n -= 1;
-            }
-            n /= 2;
-            if (n != 0)
-            //a *= a;
-            {
-                a = MultyCheck(a, a);
-            }
-        }
-        return r;
-    }
-
     protected int calc(int x, int y) {
         if (y < 0) {
             throw new EvaluateException("Negative natural power");
@@ -42,7 +24,6 @@ public class CheckedPower extends BinaryOperator {
         if (x == 0 && y == 0) {
             throw new EvaluateException("Undefined result of 0^0");
         }
-        int r = power(x, y);
         // if (r<0) throw new OverflowException();
         return power(x, y);
     }

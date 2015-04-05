@@ -30,7 +30,7 @@ class UnexpectedSymbolsException extends ParserException {
     */
 
     public UnexpectedSymbolsException(int pos, char ch) {
-        super("Unexpected symbols in input string: " + ch + " at position: " + pos);
+        super("Unexpected symbol in input string: " + ch + " at position: " + pos);
     }
 
     public UnexpectedSymbolsException(String msg) {

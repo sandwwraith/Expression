@@ -21,6 +21,24 @@ public abstract class BinaryOperator implements TripleExpression {
         return z;
     }
 
+    protected int power(int a, int n) {
+        int r = 1;
+        while (n != 0) {
+            if (n % 2 == 1) {
+                //r *= a;
+                r = MultyCheck(r, a);
+                n -= 1;
+            }
+            n /= 2;
+            if (n != 0)
+            //a *= a;
+            {
+                a = MultyCheck(a, a);
+            }
+        }
+        return r;
+    }
+
     protected abstract int calc(int a, int b);
 
     public int evaluate(int x, int y, int z) {
