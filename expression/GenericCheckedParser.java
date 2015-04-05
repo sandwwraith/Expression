@@ -6,7 +6,6 @@ package expression;
  */
 public class GenericCheckedParser implements Parser {
 
-    //private static final TripleExpression NEGATE = new Const(-1);
     private String line;
     private int shift; // current pos.
 
@@ -107,13 +106,6 @@ public class GenericCheckedParser implements Parser {
             //nothing found, go next
             return unary();
         }
-        /*int num;
-        try {
-            num = Integer.parseInt(line.substring(shift, i + shift));
-        } catch (NumberFormatException e) {
-            throw new ParserException(line.substring(shift, i + shift) + " is not a valid Integer number");
-        }
-        shift += i;*/
         String num = line.substring(shift, i + shift);
         shift += i;
         return new GenericConst(num);
@@ -194,7 +186,7 @@ public class GenericCheckedParser implements Parser {
         }
         moveNext();
         if (shift < line.length()) {
-            throw new UnexpectedSymbolsException(shift, line.charAt(shift));
+            throw new UnexpectedSymbolsException("Incorrect symbols from pos " + shift);
         }
         return exp;
     }
