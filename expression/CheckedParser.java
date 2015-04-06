@@ -90,7 +90,7 @@ public class CheckedParser implements Parser {
         }
     }
 
-    private TripleExpression unary() throws ParserException {// -
+    private TripleExpression unary() throws ParserException {// - | Abs | Sqrt
         movenext();
         char op = line.charAt(shift);
         if (op == '-' || op == 'a' || op == 's') {

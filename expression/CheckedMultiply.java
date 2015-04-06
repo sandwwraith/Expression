@@ -11,10 +11,6 @@ public class CheckedMultiply extends BinaryOperator implements TripleExpression 
     }
 
     protected int calc(int x, int y) {
-        int z = x * y;
-        if ((x == Integer.MIN_VALUE && y == -1) || ((y != 0 && z / y != x))) {
-            throw new OverflowException();
-        }
-        return z;
+        return MultyCheck(x,y);
     }
 }

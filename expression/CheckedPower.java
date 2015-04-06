@@ -9,14 +9,6 @@ public class CheckedPower extends BinaryOperator {
         super(op1, op2);
     }
 
-    /*private int MultyCheck(int x, int y) {
-        int z = x * y;
-        if ((x == Integer.MIN_VALUE && y == -1) || ((y != 0 && z / y != x))) {
-            throw new OverflowException();
-        }
-        return z;
-    }*/
-
     protected int calc(int x, int y) {
         if (y < 0) {
             throw new EvaluateException("Negative natural power");
