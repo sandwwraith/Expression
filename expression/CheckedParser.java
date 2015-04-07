@@ -66,7 +66,7 @@ public class CheckedParser implements Parser {
         movenext();
         String varName = line.substring(shift, shift + 1);
         if (!isVar(varName.charAt(0)) || (shift + 1 < line.length() && Character.isLetter(line.charAt(shift + 1)))) {
-            throw new UnexpectedSymbolsException(shift,line.charAt(shift));
+            throw new UnexpectedSymbolsException(shift, line.charAt(shift));
         } else {
             TripleExpression res = new Variable(varName);
             shift++;

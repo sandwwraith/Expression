@@ -12,14 +12,18 @@ public class CheckedLog extends BinaryOperator {
     private int log2Search(int base, int num) {
         int cur = 1;
         int curpow = 0;
-        for (int i = 1; i<32;i++) {
+        for (int i = 1; i < 32; i++) {
             try {
-                cur = MultyCheck(cur,base);
+                cur = MultyCheck(cur, base);
             } catch (OverflowException e) {
                 return curpow;
             }
-            if (cur > num) return curpow;
-            if (cur == num) return i;
+            if (cur > num) {
+                return curpow;
+            }
+            if (cur == num) {
+                return i;
+            }
             curpow = i;
         }
         throw new EvaluateException("No log");
