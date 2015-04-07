@@ -62,30 +62,30 @@ public class GenericCheckedParser implements Parser {
     private GenericTripleExpression unary() throws ParserException {// -
         moveNext();
         char op = line.charAt(shift);
-        if (op == '-') {
+        if (op == '-' || op == 's' || op == 'a') {
             if (line.charAt(shift) == '-') {
                 shift++;
                 moveNext();
                 return new GenericNegate(getNum());
             }
-            /*if (line.charAt(shift) == 'a') {
+            if (line.charAt(shift) == 'a') {
                 String abs = line.substring(shift, shift + 3);
                 if (!abs.equals("abs")) {
                     throw new UnexpectedSymbolsException("Incorrect token");
                 }
                 shift += 3;
                 moveNext();
-                return new CheckedAbsolute(getNum());
+                return new GenericAbsolute(getNum());
             }
             if (line.charAt(shift) == 's') {
-                String abs = line.substring(shift, shift + 4);
-                if (!abs.equals("sqrt")) {
+                String abs = line.substring(shift, shift + 6);
+                if (!abs.equals("square")) {
                     throw new UnexpectedSymbolsException("Incorrect token");
                 }
-                shift += 4;
+                shift += 6;
                 moveNext();
-                return new CheckedSquareRoot(getNum());
-            }*/
+                return new GenericSquare(getNum());
+            }
         }
         return bracket();
     }
@@ -138,16 +138,27 @@ public class GenericCheckedParser implements Parser {
         moveNext();
         while (shift < line.length()) {
             char op = line.charAt(shift);
-            char op2 = (shift + 1 < line.length()) ? line.charAt(shift + 1) : '?';
+            //char op2 = (shift + 1 < line.length()) ? line.charAt(shift + 1) : '?';
 
-            if ((op != '*' && op != '/') || op2 == '*' || op2 == '/') {
+            //if ((op != '*' && op != '/') || op2 == '*' || op2 == '/') {
+            if (op != '*' && op != '/' && op != 'm') {
                 return current;
             }
             shift += 1;
             if (op == '*') {
                 current = new GenericMultiply(current, getNum());
             } else {
-                current = new GenericDivide(current, getNum());
+                if (op == '/') {
+                    current = new GenericDivide(current, getNum());
+                } else {
+                    String abs = line.substring(shift, shift + 3);
+                    if (!abs.equals("mod")) {
+                        throw new UnexpectedSymbolsException("Incorrect token");
+                    }
+                    shift += 3;
+                    moveNext();
+                    return new GenericMod(current, getNum());
+                }
             }
             moveNext();
         }
