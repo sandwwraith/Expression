@@ -9,7 +9,7 @@ import java.math.BigInteger;
  * on Апр..2015
  */
 public class GenericTabulator implements Tabulator {
-    private enum EvalType {Int, Double, BigInt}
+    private enum EvalType {Int, Double, BigInt, IntNoOverF, Byte, Float, Undef}
 
     private EvalType parseEvalType(String s) {
         if (s.equals("i")) {
@@ -18,7 +18,19 @@ public class GenericTabulator implements Tabulator {
         if (s.equals("d")) {
             return EvalType.Double;
         }
-        return EvalType.BigInt;
+        if (s.equals("u")) {
+            return EvalType.IntNoOverF;
+        }
+        if (s.equals("b")) {
+            return EvalType.Byte;
+        }
+        if (s.equals("f")) {
+            return EvalType.Float;
+        }
+        if (s.equals("bi")) {
+            return EvalType.BigInt;
+        }
+        return EvalType.Undef;
     }
 
     @Override
@@ -29,6 +41,9 @@ public class GenericTabulator implements Tabulator {
         IntCalculator intCalculator = new IntCalculator();
         DoubleCalculator doubleCalculator = new DoubleCalculator();
         BigIntCalculator bigIntCalculator = new BigIntCalculator();
+        IntNoOverflowCalculator intNoOverflowCalculator = new IntNoOverflowCalculator();
+        ByteCalculator byteCalculator = new ByteCalculator();
+        FloatCalculator floatCalculator = new FloatCalculator();
 
         Object[][][] mass = new Object[x2 - x1 + 1][y2 - y1 + 1][z2 - z1 + 1];
         for (int x = x1; x <= x2; x++) {
@@ -46,6 +61,18 @@ public class GenericTabulator implements Tabulator {
                             case BigInt:
                                 res = exp.evaluate(BigInteger.valueOf(x), BigInteger.valueOf(y), BigInteger.valueOf(z), bigIntCalculator);
                                 break;
+                            case IntNoOverF:
+                                res = exp.evaluate(x, y, z, intNoOverflowCalculator);
+                                break;
+                            case Byte:
+                                res = exp.evaluate((byte) x, (byte) y, (byte) z, byteCalculator);
+                                break;
+                            case Float:
+                                res = exp.evaluate((float) x, (float) y, (float) z, floatCalculator);
+                                break;
+                            case Undef:
+                                throw new EvaluateException("Unknown evaluating type");
+
                         }
                     } catch (EvaluateException e) {
                         res = null;

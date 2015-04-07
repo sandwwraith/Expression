@@ -23,6 +23,9 @@ public class ByteCalculator implements Calculator<Byte> {
 
     @Override
     public Byte div(Byte a, Byte b) {
+        if (b == 0) {
+            throw new DivisionByZero();
+        }
         return (byte) (a / b);
     }
 
@@ -38,6 +41,9 @@ public class ByteCalculator implements Calculator<Byte> {
 
     @Override
     public Byte mod(Byte a, Byte b) {
+        if (b == 0) {
+            throw new DivisionByZero();
+        }
         return (byte) (a % b);
     }
 

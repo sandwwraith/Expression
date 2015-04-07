@@ -35,7 +35,10 @@ public class BigIntCalculator implements Calculator<BigInteger> {
     }
 
     public BigInteger mod(BigInteger a, BigInteger b) {
-        return a.mod(b);
+        if (b.signum() == 0) {
+            throw new DivisionByZero();
+        }
+        return a.remainder(b);
     }
 
     public BigInteger extractConst(String s) {

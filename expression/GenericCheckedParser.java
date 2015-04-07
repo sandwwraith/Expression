@@ -151,11 +151,11 @@ public class GenericCheckedParser implements Parser {
                 if (op == '/') {
                     current = new GenericDivide(current, getNum());
                 } else {
-                    String abs = line.substring(shift, shift + 3);
+                    String abs = line.substring(shift - 1, shift + 2);
                     if (!abs.equals("mod")) {
-                        throw new UnexpectedSymbolsException("Incorrect token");
+                        throw new UnexpectedSymbolsException("Incorrect token " + abs);
                     }
-                    shift += 3;
+                    shift += 2;
                     moveNext();
                     return new GenericMod(current, getNum());
                 }

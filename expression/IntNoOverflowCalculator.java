@@ -19,6 +19,9 @@ public class IntNoOverflowCalculator implements Calculator<Integer> {
     }
 
     public Integer div(Integer a, Integer b) {
+        if (b == 0) {
+            throw new DivisionByZero();
+        }
         return a / b;
     }
 
@@ -31,6 +34,9 @@ public class IntNoOverflowCalculator implements Calculator<Integer> {
     }
 
     public Integer mod(Integer a, Integer b) {
+        if (b == 0) {
+            throw new DivisionByZero();
+        }
         return a % b;
     }
 

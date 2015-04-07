@@ -34,7 +34,7 @@ public class FloatCalculator implements Calculator<Float> {
 
     @Override
     public Float abs(Float a) {
-        return a > 0 ? a : -a;
+        return a >= 0 ? a : -a;
     }
 
     @Override
