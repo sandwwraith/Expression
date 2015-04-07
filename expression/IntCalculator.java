@@ -41,6 +41,13 @@ public class IntCalculator implements Calculator<Integer> {
         return -x;
     }
 
+    public Integer abs(Integer x) {
+        if (x == Integer.MIN_VALUE) {
+            throw new OverflowException();
+        }
+        return x > 0 ? x : -x;
+    }
+
     public Integer extractConst(String s) {
         int num;
         try {

@@ -30,6 +30,10 @@ public class BigIntCalculator implements Calculator<BigInteger> {
         return a.negate();
     }
 
+    public BigInteger abs(BigInteger a) {
+        return a.abs();
+    }
+
     public BigInteger extractConst(String s) {
         BigInteger num;
         try {

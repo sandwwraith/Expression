@@ -22,6 +22,9 @@ public class DoubleCalculator implements Calculator<Double> {
         return -a;
     }
 
+    public Double abs(Double a) {
+        return a > 0 ? a : -a;
+    }
     public Double extractConst(String s) {
         double num;
         try {

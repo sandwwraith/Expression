@@ -15,6 +15,8 @@ public interface Calculator<T> {
 
     public T negate(T a);
 
+    public T abs(T a);
+
     public T extractConst(String s);
 }
 
