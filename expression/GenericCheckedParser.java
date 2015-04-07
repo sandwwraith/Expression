@@ -98,7 +98,7 @@ public class GenericCheckedParser implements Parser {
             neg = true;
             i++;
         }
-        while (i + shift < line.length() && Character.isDigit(line.charAt(i + shift))) {
+        while (i + shift < line.length() && (Character.isDigit(line.charAt(i + shift)) || line.charAt(i + shift) == '.')) {
             i++;
         }
 
