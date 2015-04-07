@@ -34,6 +34,10 @@ public class BigIntCalculator implements Calculator<BigInteger> {
         return a.abs();
     }
 
+    public BigInteger mod(BigInteger a, BigInteger b) {
+        return a.mod(b);
+    }
+
     public BigInteger extractConst(String s) {
         BigInteger num;
         try {

@@ -48,6 +48,14 @@ public class IntCalculator implements Calculator<Integer> {
         return x > 0 ? x : -x;
     }
 
+
+    public Integer mod(Integer a, Integer b) {
+        if (b == 0) {
+            throw new DivisionByZero();
+        }
+        return a % b;
+    }
+
     public Integer extractConst(String s) {
         int num;
         try {

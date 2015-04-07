@@ -17,6 +17,12 @@ public interface Calculator<T> {
 
     public T abs(T a);
 
+    public T mod(T a, T b);
+
+    default public T square(T a) {
+        return mul(a, a);
+    }
+
     public T extractConst(String s);
 }
 
