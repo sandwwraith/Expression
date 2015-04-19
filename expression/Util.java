@@ -25,7 +25,12 @@ public class Util {
     }
 
     public static void assertEquals(final String message, final double actual, final double expected) {
-        assertTrue(String.format("%s: Expected %f, found %f", message, expected, actual), Math.abs(actual - expected) < 1e-9);
+        assertTrue(
+                String.format("%s: Expected %f, found %f", message, expected, actual),
+                Math.abs(actual - expected) < 1e-9 ||
+                        Double.isNaN(actual) && Double.isNaN(expected) ||
+                        Double.isInfinite(actual) && Double.isInfinite(expected) && Math.signum(actual) == Math.signum(expected)
+        );
     }
 
     public static void checkAssert(final Class<?> c) {
