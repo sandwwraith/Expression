@@ -76,7 +76,7 @@ var unaryOperations = {
 function parse(expression) {
     var stack = [];
     for (var i = 0; i < expression.length; i++) {
-        var c = expression[i]
+        var c = expression[i];
         if (typeof binaryOperations[c] != "undefined" && (i == expression.length - 1 || expression[i + 1] == " ")) {
             var a = stack.pop();
             var b = stack.pop();
