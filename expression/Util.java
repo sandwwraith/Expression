@@ -1,9 +1,6 @@
 package expression;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -24,16 +21,22 @@ public class Util {
         assertTrue(String.format("%s: Expected %d, found %d", message, expected, actual), actual == expected);
     }
 
-    public static void assertEquals(final String message, final double actual, final double expected) {
+    public static void assertEquals(final String message, final Object actual, final Object expected) {
+        assertTrue(String.format("%s: Expected \"%s\", found \"%s\"", message, expected, actual), actual != null && actual.equals(expected) || expected == null);
+    }
+
+    public static void assertEquals(final String message, final double precision, final double actual, final double expected) {
         assertTrue(
-                String.format("%s: Expected %f, found %f", message, expected, actual),
-                Math.abs(actual - expected) < 1e-9 ||
-                        Double.isNaN(actual) && Double.isNaN(expected) ||
-                        Double.isInfinite(actual) && Double.isInfinite(expected) && Math.signum(actual) == Math.signum(expected)
+                String.format("%s: Expected %.12f, found %.12f", message, expected, actual),
+                Math.abs(actual - expected) < precision ||
+                        (Double.isNaN(actual) || Double.isInfinite(actual)) &&
+                                (Double.isNaN(expected) || Double.isInfinite(expected))
         );
     }
 
     public static void checkAssert(final Class<?> c) {
+        Locale.setDefault(Locale.US);
+
         boolean assertsEnabled = false;
         assert assertsEnabled = true;
         if (!assertsEnabled) {

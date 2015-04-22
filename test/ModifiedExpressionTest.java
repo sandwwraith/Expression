@@ -1,10 +1,8 @@
 package test;
 
-import static expression.Util.checkAssert;
 import static expression.Util.list;
 
 /**
- * @author Niyaz Nigmatullin
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)
  */
 public class ModifiedExpressionTest extends ExpressionTest {
@@ -26,7 +24,6 @@ public class ModifiedExpressionTest extends ExpressionTest {
     }
 
     public static void main(final String[] args) {
-        checkAssert(ModifiedExpressionTest.class);
-        new ModifiedExpressionTest(false).test();
+        new ModifiedExpressionTest(mode(args, ModifiedExpressionTest.class, "easy", "hard") == 1).test();
     }
 }

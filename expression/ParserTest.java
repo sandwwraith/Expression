@@ -115,7 +115,7 @@ public class ParserTest {
         try {
             final int actual = expression.evaluate(vars[0], vars[1], vars[2]);
             assertTrue(String.format("Error expected x = %d, y=%d, z=%d", vars[0], vars[1], vars[2]), !answer.isLeft());
-            assertEquals(String.format("f(%d, %d, %d)\n%s", vars[0], vars[1], vars[2], expression), actual, answer.getRight());
+            assertEquals(String.format("f(%d, %d, %d)\n%s", vars[0], vars[1], vars[2], expression), actual, (int) answer.getRight());
         } catch (final Exception e) {
             if (!answer.isLeft()) {
                 throw new AssertionError(String.format("No error expected for x = %d, y=%d, z=%d", vars[0], vars[1], vars[2]), e);
