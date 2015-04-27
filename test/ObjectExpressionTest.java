@@ -73,8 +73,8 @@ public class ObjectExpressionTest extends BaseTest {
         for (final Op2 t : tests) {
             final Op3 test = (Op3) t;
 
-            testDiff(test, test.name, false);
             if (hard) {
+                testDiff(test, test.name, false);
                 testDiff(test, "parse('" + test.polish + "')", false);
             }
             if (bonus) {

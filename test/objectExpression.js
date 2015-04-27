@@ -61,7 +61,7 @@ function Operation(func, sign) {
 
         //noinspection JSPotentiallyInvalidUsageOfThis
         this.evaluate = function () {
-            return func(op1.evaluate.apply(null, arguments), op2 && op2.evaluate.apply(null, arguments));
+            return func(op1.evaluate.apply(op1, arguments), op2 && op2.evaluate.apply(op2, arguments));
         };
 
         //noinspection JSPotentiallyInvalidUsageOfThis
