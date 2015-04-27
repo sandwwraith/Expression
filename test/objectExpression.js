@@ -34,8 +34,9 @@ function Variable(name) {
         }
     };
 
-    this.diff = function () {
-        return new Const(1);
+    this.diff = function (p) {
+        if (name == p) return new Const(1);
+        return new Const(0);
     }
 }
 
@@ -64,10 +65,19 @@ function Operation(func, sign) {
         };
 
         //noinspection JSPotentiallyInvalidUsageOfThis
-        this.diff = function () {
+        this.diff = function (p) {
             switch (sign) {
                 case '+':
-                    return new Add(op1.diff(), op2.diff());
+                    return new Add(op1.diff(p), op2.diff(p));
+                case '-':
+                    return new Subtract(op1.diff(p), op2.diff(p));
+                case '*':
+                    return new Add(new Multiply(op1.diff(p), op2), new Multiply(op1, op2.diff(p)));
+                case 'negate':
+                    return new Negate(op1.diff(p));
+                case '/':
+                    return new Divide(new Subtract(new Multiply(op1.diff(p), op2), new Multiply(op1, op2.diff(p))),
+                        new Multiply(op2, op2));
             }
         }
     }
@@ -79,15 +89,69 @@ var Multiply = Operation(mulOp, "*");
 var Divide = Operation(divOp, "/");
 var Negate = Operation(negateOp, "negate");
 
-/*
- var expr = new Subtract(
+var binaryOperations = {
+    "+ ": Add,
+    "- ": Subtract,
+    "* ": Multiply,
+    "/ ": Divide
+};
+
+var unaryOperations = {
+    "n": Negate
+};
+
+var unaryShifts = {
+    "n": 6
+};
+
+function getNumPos(expression, i) {
+    var c = expression[i];
+    while (c >= "0" && c <= "9" && i < expression.length) {
+        i++;
+        c = expression[i];
+    }
+    return i;
+}
+
+function parse(expression) {
+    var z;
+    var stack = [];
+    for (var i = 0; i < expression.length; i++) {
+        var c = expression[i];
+        var cc = c + (expression + " ")[i + 1];
+        if (cc in binaryOperations) {
+            var a = stack.pop();
+            var b = stack.pop();
+            stack.push(new binaryOperations[cc](b, a));
+            i++;
+        } else if (c in unaryOperations) {
+            stack.push(new unaryOperations[c](stack.pop()));
+            i += unaryShifts[c];
+        } else if ((c == "x") || (c == "y") || (c == "z")) {
+            stack.push(new Variable(c));
+        } else if ((c >= "0" && c <= "9") || (c == "-")) {
+            var acc = c;
+            i++;
+            z = getNumPos(expression, i);
+            acc = acc + expression.substring(i, z);
+            i = z;
+            stack.push(new Const(parseInt(acc)));
+        }
+    }
+    return stack.pop();
+}
+
+/* var expr = new Subtract(
  new Multiply(
  new Const(2),
  new Variable("x")
  ),
  new Const(3)
- );
+ );*/
 
- var println = console.log;
+/* var println = console.log;
  var simple = new Add(new Variable("x"),new Const(3));
- println(simple.diff().evaluate(100));*/
+ println(simple.diff().evaluate(100));
+
+ var e = parse("2 x + 10 -");
+ println(parse(e.diff("x").toString()).evaluate(10));*/
