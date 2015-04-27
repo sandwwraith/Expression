@@ -34,7 +34,7 @@ public class ExpressionTest extends BaseTest {
         ));
     }
 
-    public static void main(final String[] args) {
+    public static void main(final String... args) {
         new ExpressionTest(mode(args, ExpressionTest.class, "easy", "hard") == 1).test();
     }
 }

@@ -26,6 +26,7 @@ public class BaseTest {
     protected final List<Op2<DoubleUnaryOperator>> unary = new ArrayList<>();
     protected final List<Op2<DoubleBinaryOperator>> binary = new ArrayList<>();
     protected List<Op2<TExpression>> tests = new ArrayList<>();
+    protected String parseMethod = "parse";
 
     protected final ScriptEngine engine;
     final boolean hard;
@@ -52,19 +53,34 @@ public class BaseTest {
         }
     }
 
+    protected String addSpaces(final String expression) {
+        String spaced = expression;
+        for (int n = StrictMath.min(10, 200 / expression.length()); n > 0; ) {
+            final int index = randomInt(spaced.length() + 1);
+            final char c = index == 0 ? 0 : spaced.charAt(index - 1);
+            final char nc = index == spaced.length() ? 0 : spaced.charAt(index);
+            if ((!Character.isDigit(c) && c != '-' || !Character.isDigit(nc)) && (!Character.isLetterOrDigit(c) || !Character.isLetterOrDigit(nc)) && c != '\'' && nc != '\'') {
+                spaced = spaced.substring(0, index) + " " + spaced.substring(index);
+                n--;
+            }
+        }
+        return spaced;
+    }
+
     protected void test() {
         for (final Op2<TExpression> test : tests) {
             test(test.name, test.f, test.polish);
             if (hard) {
-                test("parse(\"" + test.polish + "\")", test.f, test.polish);
+                test(parseMethod + "('" + test.polish + "')", test.f, test.polish);
+                test(parseMethod + "('" + addSpaces(test.polish) + "')", test.f, test.polish);
             }
         }
 
-        testRandom(1000, (v, i) -> generate(v, i / 5 + 2));
+        testRandom(500, (v, i) -> generate(v, i / 5 + 2));
         System.out.println("OK");
     }
 
-    private void test(final String expression, final TExpression f, final String polish) {
+    protected void test(final String expression, final TExpression f, final String polish) {
         System.out.println("Testing: " + expression);
         test(expression, polish);
         try {
@@ -72,9 +88,9 @@ public class BaseTest {
         } catch (final ScriptException e) {
             throw new AssertionError("Script error", e);
         }
-        for (double i = 0; i < N; i += 1) {
-            for (double j = 0; j < N; j += 1) {
-                for (double k = 0; k < N; k += 1) {
+        for (double i = 1; i <= N; i += 1) {
+            for (double j = 1; j <= N; j += 1) {
+                for (double k = 1; k <= N; k += 1) {
                     test(expression, new double[] {i, j, k}, "expr", f.evaluate(i, j, k), EPS);
                 }
             }
@@ -96,8 +112,9 @@ public class BaseTest {
 
             test(test.expr, vars, test.expr, test.answer, EPS);
             test(test.expr, test.polish);
+            test(addSpaces(test.expr), test.polish);
             if (hard) {
-                final String expr = "parse(\"" + test.polish + "\")";
+                final String expr = parseMethod + "('" + test.polish + "')";
                 test(expr, vars, expr, test.answer, EPS);
                 test(expr, test.polish);
             }
@@ -106,19 +123,19 @@ public class BaseTest {
 
     protected void test(final String context, final double[] vars, final String expression, final double expected, final double precision) {
         try {
-            final Object result = engine.eval(expression + evaluate + "(" + vars[0] + "," + vars[1] + "," + vars[2] + ");");
+            final Object result = engine.eval(String.format("%s%s(%.20f, %.20f, %.20f);", expression, evaluate, vars[0], vars[1], vars[2]));
             if (result instanceof Number) {
-                assertEquals(String.format("f(%f, %f, %f)\n%s", vars[0], vars[1], vars[2], context), precision, ((Number) result).doubleValue(), expected);
+                assertEquals(String.format("f(%.20f, %.20f, %.20f)\n%s", vars[0], vars[1], vars[2], context), precision, ((Number) result).doubleValue(), expected);
             } else {
                 throw new AssertionError(String.format(
-                        "Expected number, found \"%s\" (%s) for x = %f, y = %f, z = %f in\n%s",
+                        "Expected number, found \"%s\" (%s) for x = %.20f, y = %.20f, z = %.20f in\n%s",
                         result, result.getClass().getSimpleName(),
                         vars[0], vars[1], vars[2],
                         context
                 ));
             }
         } catch (final ScriptException e) {
-            throw new AssertionError(String.format("No error expected for x = %f, y = %f, z = %f in\n%s", vars[0], vars[1], vars[2], context), e);
+            throw new AssertionError(String.format("No error expected for x = %.20f, y = %.20f, z = %.20f in\n%s", vars[0], vars[1], vars[2], context), e);
         }
     }
 
@@ -129,12 +146,11 @@ public class BaseTest {
         final int operator = randomInt(6);
         if (operator <= 0) {
             return genP(vars, depth);
-        } else {
+        } else
             if (operator <= 1) {
                 return unary(random(unary), genP(vars, depth));
-            } else {
+        } else {
                 return binary(random(binary), genP(vars, depth), genP(vars, depth));
-            }
         }
     }
 
@@ -172,13 +188,21 @@ public class BaseTest {
     protected Test binary(final Op2<DoubleBinaryOperator> op, final Test t1, final Test t2) {
         return new Test(
                 op.name + "(" + t1.expr + ", " + t2.expr + ")",
-                t1.polish + " " + t2.polish + " " + op.polish,
+                binary(op.polish, t1.polish, t2.polish),
                 op.f.applyAsDouble(t1.answer, t2.answer)
         );
     }
 
+    protected String binary(final String o, final String arg1, final String arg2) {
+        return arg1 + " " + arg2 + " " + o;
+    }
+
     protected Test unary(final Op2<DoubleUnaryOperator> op, final Test arg) {
-        return new Test(op.name + "(" + arg.expr + ")", arg.polish + " " + op.polish, op.f.applyAsDouble(arg.answer));
+        return new Test(op.name + "(" + arg.expr + ")", unary(op.polish, arg.polish), op.f.applyAsDouble(arg.answer));
+    }
+
+    protected String unary(final String op, final String arg) {
+        return arg + " " + op;
     }
 
     public static class Test {
@@ -218,16 +242,14 @@ public class BaseTest {
 
         if (args.length == 0) {
             System.err.println("No arguments found");
-        } else {
+        } else
             if (args.length > 1) {
                 System.err.println("Only one argument expected, " + args.length + " found");
-            } else {
+            } else
                 if (Arrays.asList(modes).indexOf(args[0]) < 0) {
                     System.err.println("First argument should be one of: \"" + String.join("\", \"", modes) + "\", found: \"" + args[0] + "\"");
-                } else {
+        } else {
                     return Arrays.asList(modes).indexOf(args[0]);
-                }
-            }
         }
         System.err.println("Usage: java -ea " + type.getName() + " (" + String.join("|", modes) + ")");
         System.exit(0);

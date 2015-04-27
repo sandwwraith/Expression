@@ -16,12 +16,13 @@ public class ObjectExpressionTest extends BaseTest {
     protected final Test vy = variable("y", 0);
     protected final Test vz = variable("z", 0);
 
-    private final Op2<DoubleBinaryOperator> add = op2("new Add", "+", (a, b) -> a + b);
-    private final Op2<DoubleBinaryOperator> multiply = op2("new Multiply", "*", (a, b) -> a * b);
-    private final Op2<DoubleBinaryOperator> subtract = op2("new Subtract", "-", (a, b) -> a - b);
-    private final Op2<DoubleBinaryOperator> divide = op2("new Divide", "/", (a, b) -> a / b);
-    private final Op2<DoubleUnaryOperator> neg = op2("new Negate", "negate", a -> -a);
-    private final boolean bonus;
+    protected final Op2<DoubleBinaryOperator> add = op2("new Add", "+", (a, b) -> a + b);
+    protected final Op2<DoubleBinaryOperator> multiply = op2("new Multiply", "*", (a, b) -> a * b);
+    protected final Op2<DoubleBinaryOperator> subtract = op2("new Subtract", "-", (a, b) -> a - b);
+    protected final Op2<DoubleBinaryOperator> divide = op2("new Divide", "/", (a, b) -> a / b);
+    protected final Op2<DoubleUnaryOperator> neg = op2("new Negate", "negate", a -> -a);
+    protected final boolean bonus;
+    protected String toStringMethod = "toString";
 
     protected ObjectExpressionTest(final boolean hard, final boolean bonus) {
         super("objectExpression.js", hard, ".evaluate");
@@ -70,15 +71,15 @@ public class ObjectExpressionTest extends BaseTest {
     protected void test() {
         super.test();
 
-        for (final Op2 t : tests) {
-            final Op3 test = (Op3) t;
+        if (hard) {
+            for (final Op2 t : tests) {
+                final Op3 test = (Op3) t;
 
-            if (hard) {
                 testDiff(test, test.name, false);
-                testDiff(test, "parse('" + test.polish + "')", false);
-            }
-            if (bonus) {
-                testDiff(test, "parse('" + test.polish + "')", true);
+                testDiff(test, parseMethod + "('" + test.polish + "')", false);
+                if (bonus) {
+                    testDiff(test, parseMethod + "('" + test.polish + "')", true);
+                }
             }
         }
     }
@@ -91,9 +92,9 @@ public class ObjectExpressionTest extends BaseTest {
             try {
                 engine.eval("expr = " + value);
                 if (simplify) {
-                    final int length = (int) engine.eval("expr.toString().length");
+                    final int length = (int) engine.eval("expr." + toStringMethod + "().length");
                     final int expected = test.simplified[variable];
-                    assertTrue(value + ".toString().length too long: " + length + " instead of " + expected, length <= expected);
+                    assertTrue(value + "." + toStringMethod + "().length too long: " + length + " instead of " + expected, length <= expected);
                 }
             } catch (final ScriptException e) {
                 throw new AssertionError("Script error", e);
@@ -105,7 +106,7 @@ public class ObjectExpressionTest extends BaseTest {
                     for (int k = 1; k <= N; k += 1) {
                         final double dk = variable == 2 ? D : 0;
                         final double expected = (test.f.evaluate(i + di, j + dj, k + dk) - test.f.evaluate(i - di, j - dj, k - dk)) / D / 2;
-                        test(value, new double[] {i, j, k}, "expr", expected, 1e-6);
+                        test(value, new double[] {i, j, k}, "expr", expected, 1e-5);
                     }
                 }
             }
@@ -124,11 +125,17 @@ public class ObjectExpressionTest extends BaseTest {
 
     @Override
     protected void test(final String expression, final String polish) {
-        final String value = expression + ".toString()";
+        testToString(expression, polish);
+
+        testToString(addSpaces(expression), polish);
+    }
+
+    private void testToString(final String expression, final String expected) {
+        final String script = expression + "." + toStringMethod + "()";
         try {
-            assertEquals(value, engine.eval(value), polish);
+            assertEquals(script, engine.eval(script), expected);
         } catch (final ScriptException e) {
-            throw new AssertionError("Error in " + value, e);
+            throw new AssertionError("Error parsing " + script + "\n" + e.getMessage() + "\n", e);
         }
     }
 
@@ -145,7 +152,7 @@ public class ObjectExpressionTest extends BaseTest {
         }
     }
 
-    public static void main(final String[] args) {
+    public static void main(final String... args) {
         final int mode = mode(args, ObjectExpressionTest.class, "easy", "hard", "bonus");
         new ObjectExpressionTest(mode >= 1, mode >= 2).test();
     }
