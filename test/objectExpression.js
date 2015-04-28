@@ -55,48 +55,79 @@ function Const(value) {
     }
 }
 
-function Operation(func, sign) {
-    return function (op1, op2) {
-        //noinspection JSPotentiallyInvalidUsageOfThis
+function Operation(func, sign, op11, op22) {
+    Object.defineProperties(this, {
+        op1: {value: op11, enumerable: true, writable: false, configurable: false},
+        op2: {value: op22, enumerable: true, writable: false, configurable: false}
+    });
+    /* this.op1 = op1;
+     this.op2 = op2;*/
         this.toString = function () {
-            return op1.toString() + " " + (op2 !== undefined ? (op2.toString() + " ") : "") + sign;
+            return this.op1.toString() + " " + (this.op2 !== undefined ? (this.op2.toString() + " ") : "") + sign;
         };
 
-        //noinspection JSPotentiallyInvalidUsageOfThis
         this.evaluate = function () {
-            return func(op1.evaluate.apply(op1, arguments), op2 && op2.evaluate.apply(op2, arguments));
+            return func(this.op1.evaluate.apply(this.op1, arguments), this.op2 && this.op2.evaluate.apply(this.op2, arguments));
         };
-
-        //noinspection JSPotentiallyInvalidUsageOfThis
-        this.diff = function (p) {
-            switch (sign) {
-                case '+':
-                    return new Add(op1.diff(p), op2.diff(p));
-                case '-':
-                    return new Subtract(op1.diff(p), op2.diff(p));
-                case '*':
-                    return new Add(new Multiply(op1.diff(p), op2), new Multiply(op1, op2.diff(p)));
-                case 'negate':
-                    return new Negate(op1.diff(p));
-                case '/':
-                    return new Divide(new Subtract(new Multiply(op1.diff(p), op2), new Multiply(op1, op2.diff(p))),
-                        new Multiply(op2, op2));
-                case 'sin':
-                    return new Multiply(new Cos(op1), op1.diff(p));
-                case 'cos':
-                    return new Multiply(new Negate(new Sin(op1)), op1.diff(p));
-            }
-        }
-    }
 }
 
-var Add = Operation(addOp, "+");
-var Subtract = Operation(subOp, "-");
-var Multiply = Operation(mulOp, "*");
-var Divide = Operation(divOp, "/");
-var Negate = Operation(negateOp, "negate");
-var Sin = Operation(sinOp, "sin");
-var Cos = Operation(cosOp, "cos");
+function Add(op1, op2) {
+    Operation.call(this, addOp, "+", op1, op2);
+
+}
+
+Add.prototype.diff = function (p) {
+    return new Add(this.op1.diff(p), this.op2.diff(p));
+};
+
+function Subtract(op1, op2) {
+    Operation.call(this, subOp, "-", op1, op2);
+}
+
+Subtract.prototype.diff = function (p) {
+    return new Subtract(this.op1.diff(p), this.op2.diff(p));
+};
+
+function Multiply(op1, op2) {
+    Operation.call(this, mulOp, "*", op1, op2);
+}
+
+Multiply.prototype.diff = function (p) {
+    return new Add(new Multiply(this.op1.diff(p), this.op2), new Multiply(this.op1, this.op2.diff(p)));
+};
+
+function Divide(op1, op2) {
+    Operation.call(this, divOp, "/", op1, op2);
+}
+
+Divide.prototype.diff = function (p) {
+    return new Divide(new Subtract(new Multiply(this.op1.diff(p), this.op2), new Multiply(this.op1, this.op2.diff(p))),
+        new Multiply(this.op2, this.op2));
+};
+
+function Negate(op) {
+    Operation.call(this, negateOp, "negate", op);
+}
+
+Negate.prototype.diff = function (p) {
+    return new Negate(this.op1.diff(p));
+};
+
+function Sin(op) {
+    Operation.call(this, sinOp, "sin", op);
+}
+
+Sin.prototype.diff = function (p) {
+    return new Multiply(new Cos(this.op1), this.op1.diff(p));
+};
+
+function Cos(op) {
+    Operation.call(this, cosOp, "cos", op);
+}
+
+Cos.prototype.diff = function (p) {
+    return new Multiply(new Negate(new Sin(this.op1)), this.op1.diff(p));
+};
 
 var binaryOperations = {
     "+ ": Add,
