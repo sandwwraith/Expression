@@ -19,6 +19,9 @@ var negateOp = function (a) {
     return -a;
 };
 
+var sinOp = Math.sin;
+var cosOp = Math.cos;
+
 function Variable(name) {
     this.toString = function () {
         return name;
@@ -78,6 +81,10 @@ function Operation(func, sign) {
                 case '/':
                     return new Divide(new Subtract(new Multiply(op1.diff(p), op2), new Multiply(op1, op2.diff(p))),
                         new Multiply(op2, op2));
+                case 'sin':
+                    return new Multiply(new Cos(op1), op1.diff(p));
+                case 'cos':
+                    return new Multiply(new Negate(new Sin(op1)), op1.diff(p));
             }
         }
     }
@@ -88,6 +95,8 @@ var Subtract = Operation(subOp, "-");
 var Multiply = Operation(mulOp, "*");
 var Divide = Operation(divOp, "/");
 var Negate = Operation(negateOp, "negate");
+var Sin = Operation(sinOp, "sin");
+var Cos = Operation(cosOp, "cos");
 
 var binaryOperations = {
     "+ ": Add,
@@ -97,11 +106,15 @@ var binaryOperations = {
 };
 
 var unaryOperations = {
-    "n": Negate
+    "n": Negate,
+    "s": Sin,
+    "c": Cos
 };
 
 var unaryShifts = {
-    "n": 6
+    "n": 6,
+    "s": 3,
+    "c": 3
 };
 
 function getNumPos(expression, i) {
