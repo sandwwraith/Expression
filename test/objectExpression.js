@@ -23,129 +23,109 @@ var sinOp = Math.sin;
 var cosOp = Math.cos;
 
 function Variable(name) {
-    this.toString = function () {
-        return name;
-    };
-    this.evaluate = function () {
-        switch (name) {
-            case "x":
-                return arguments[0];
-            case "y":
-                return arguments[1];
-            default:
-                return arguments[2];
-        }
-    };
-
-    this.diff = function (p) {
-        if (name == p) return new Const(1);
-        return new Const(0);
-    }
+    Object.defineProperty(this, "name", {value: name, enumerable: true});
 }
 
-function Const(value) {
-    this.toString = function () {
-        return value.toString();
-    };
-    this.evaluate = function () {
-        return value;
-    };
-    this.diff = function () {
-        return new Const(0);
+Variable.prototype.toString = function () {
+    return this.name;
+};
+Variable.prototype.evaluate = function () {
+    switch (this.name) {
+        case "x":
+            return arguments[0];
+        case "y":
+            return arguments[1];
+        default:
+            return arguments[2];
     }
-}
+};
+Variable.prototype.diff = function (p) {
+    if (this.name == p) return new Const(1);
+    return new Const(0);
+};
 
-function Operation(func, sign, op11, op22) {
+function Const(Value) {
+    Object.defineProperties(this, {
+        value: {value: Value, enumerable: true, writable: false, configurable: false}
+    });
+}
+Const.prototype.toString = function () {
+    return this.value.toString();
+};
+Const.prototype.evaluate = function () {
+    return this.value;
+};
+Const.prototype.diff = function () {
+    return new Const(0);
+};
+
+function Operation(op11, op22) {
     Object.defineProperties(this, {
         op1: {value: op11, enumerable: true, writable: false, configurable: false},
         op2: {value: op22, enumerable: true, writable: false, configurable: false}
     });
-    /* this.op1 = op1;
-     this.op2 = op2;*/
-        this.toString = function () {
-            return this.op1.toString() + " " + (this.op2 !== undefined ? (this.op2.toString() + " ") : "") + sign;
-        };
-
-        this.evaluate = function () {
-            return func(this.op1.evaluate.apply(this.op1, arguments), this.op2 && this.op2.evaluate.apply(this.op2, arguments));
-        };
 }
 
-function Add(op1, op2) {
-    Operation.call(this, addOp, "+", op1, op2);
+var OpHelper = function (f, s) {
+    var p = function (op1, op2) {
+        Operation.call(this, op1, op2);
+    };
+    p.prototype.toString = function () {
+        return this.op1.toString() + " " + (this.op2 !== undefined ? (this.op2.toString() + " ") : "") + s;
+    };
+    p.prototype.evaluate = function () {
+        return f(this.op1.evaluate.apply(this.op1, arguments), this.op2 && this.op2.evaluate.apply(this.op2, arguments));
+    };
+    return p;
+};
 
-}
-
+var Add = OpHelper(addOp, "+");
 Add.prototype.diff = function (p) {
     return new Add(this.op1.diff(p), this.op2.diff(p));
 };
 
-function Subtract(op1, op2) {
-    Operation.call(this, subOp, "-", op1, op2);
-}
-
+var Subtract = OpHelper(subOp, "-");
 Subtract.prototype.diff = function (p) {
     return new Subtract(this.op1.diff(p), this.op2.diff(p));
 };
 
-function Multiply(op1, op2) {
-    Operation.call(this, mulOp, "*", op1, op2);
-}
-
+var Multiply = OpHelper(mulOp, "*");
 Multiply.prototype.diff = function (p) {
     return new Add(new Multiply(this.op1.diff(p), this.op2), new Multiply(this.op1, this.op2.diff(p)));
 };
 
-function Divide(op1, op2) {
-    Operation.call(this, divOp, "/", op1, op2);
-}
-
+var Divide = OpHelper(divOp, "/");
 Divide.prototype.diff = function (p) {
     return new Divide(new Subtract(new Multiply(this.op1.diff(p), this.op2), new Multiply(this.op1, this.op2.diff(p))),
         new Multiply(this.op2, this.op2));
 };
 
-function Negate(op) {
-    Operation.call(this, negateOp, "negate", op);
-}
-
+var Negate = OpHelper(negateOp, "negate");
 Negate.prototype.diff = function (p) {
     return new Negate(this.op1.diff(p));
 };
 
-function Sin(op) {
-    Operation.call(this, sinOp, "sin", op);
-}
-
+var Sin = OpHelper(sinOp, "sin");
 Sin.prototype.diff = function (p) {
     return new Multiply(new Cos(this.op1), this.op1.diff(p));
 };
 
-function Cos(op) {
-    Operation.call(this, cosOp, "cos", op);
-}
-
+var Cos = OpHelper(cosOp, "cos");
 Cos.prototype.diff = function (p) {
     return new Multiply(new Negate(new Sin(this.op1)), this.op1.diff(p));
 };
 
 var binaryOperations = {
-    "+ ": Add,
-    "- ": Subtract,
-    "* ": Multiply,
-    "/ ": Divide
+    "+": Add,
+    "-": Subtract,
+    "*": Multiply,
+    "/": Divide
 };
 
 var unaryOperations = {
-    "n": Negate,
-    "s": Sin,
-    "c": Cos
-};
-
-var unaryShifts = {
-    "n": 6,
-    "s": 3,
-    "c": 3
+    "negate": Negate,
+    "sin": Sin,
+    "cos": Cos
 };
 
 function getNumPos(expression, i) {
@@ -160,26 +140,20 @@ function getNumPos(expression, i) {
 function parse(expression) {
     var z;
     var stack = [];
-    for (var i = 0; i < expression.length; i++) {
-        var c = expression[i];
-        var cc = c + (expression + " ")[i + 1];
-        if (cc in binaryOperations) {
+    var mass = expression.split(" ");
+    for (var i = 0; i < mass.length; i++) {
+        var c = mass[i];
+        if (c.length == 0) continue;
+        if (c in binaryOperations) {
             var a = stack.pop();
             var b = stack.pop();
-            stack.push(new binaryOperations[cc](b, a));
-            i++;
+            stack.push(new binaryOperations[c](b, a));
         } else if (c in unaryOperations) {
             stack.push(new unaryOperations[c](stack.pop()));
-            i += unaryShifts[c];
         } else if ((c == "x") || (c == "y") || (c == "z")) {
             stack.push(new Variable(c));
-        } else if ((c >= "0" && c <= "9") || (c == "-")) {
-            var acc = c;
-            i++;
-            z = getNumPos(expression, i);
-            acc = acc + expression.substring(i, z);
-            i = z;
-            stack.push(new Const(parseInt(acc)));
+        } else if ((c[0] >= "0" && c[0] <= "9") || (c[0] == "-")) {
+            stack.push(new Const(parseInt(c)));
         }
     }
     return stack.pop();
@@ -195,7 +169,9 @@ function parse(expression) {
 
 /* var println = console.log;
  var simple = new Add(new Variable("x"),new Const(3));
- println(simple.diff().evaluate(100));
+ println(simple.toString());
+ var e = new Add(new Const(3), new Const(5));
+ println(e.toString());*/
 
- var e = parse("2 x + 10 -");
+/* var e = parse("2 x + 10 -");
  println(parse(e.diff("x").toString()).evaluate(10));*/
