@@ -5,36 +5,51 @@ import static expression.Util.list;
 /**
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)
  */
-public class ExpressionTest extends BaseTest {
-    protected ExpressionTest(final boolean hard) {
-        super("expression.js", hard, "");
+public class ExpressionTest extends BaseTest<Engine> {
+    public static final Dialect FUNCTIONS = dialect("variable('%s')", "cnst(%s)", "%s(%s)", "%s(%s, %s)");
+    public static final Dialect POLISH = dialect("%s", "%s", "%2$s %1$s", "%2$s %3$s %1$s");
 
-        unary.addAll(list(
-                op2("negate", "negate", a -> -a)
-        ));
+    public static final Ops OPS = ops()
+            .binary("+", "add", "+", (a, b) -> a + b)
+            .binary("-", "subtract", "-", (a, b) -> a - b)
+            .binary("*", "multiply", "*", (a, b) -> a * b)
+            .binary("/", "divide", "/", (a, b) -> a / b)
+            .unary("negate", "negate", "negate", a -> -a);
 
-        binary.addAll(list(
-                op2("add", "+", (a, b) -> a + b),
-                op2("subtract", "-", (a, b) -> a - b),
-                op2("multiply", "*", (a, b) -> a * b),
-                op2("divide", "/", (a, b) -> a / b)
-        ));
+    public ExpressionTest(final Engine engine, final Dialect parsed, final Dialect unparsed, final boolean testParsing) {
+        super(engine, new ArithmeticLanguage(parsed, unparsed, OPS), testParsing);
+    }
 
-        tests.addAll(list(
-                op2("cnst(10)", "10", (x, y, z) -> 10.0),
-                op2("variable('x')", "x", (x, y, z) -> x),
-                op2("variable('y')", "y", (x, y, z) -> y),
-                op2("variable('z')", "z", (x, y, z) -> z),
-                op2("add(variable('x'), cnst(2))", "x 2 +", (x, y, z) -> x + 2),
-                op2("subtract(cnst(2), variable('y'))", "2 y -", (x, y, z) -> 2 - y),
-                op2("multiply(cnst(3), variable('z'))", "3 z *", (x, y, z) -> 3 * z),
-                op2("divide(cnst(3), variable('z'))", "3 z /", (x, y, z) -> 3 / z),
-                op2("divide(negate(variable('x')), cnst(2))", "x negate 2 /", (x, y, z) -> -x / 2),
-                op2("divide(variable('x'), multiply(variable('y'), variable('z')))", "x y z * /", (x, y, z) -> x / (y * z))
-        ));
+    protected ExpressionTest(final boolean testParsing) {
+        this(new JSEngine("expression.js", ""), FUNCTIONS, POLISH, testParsing);
+    }
+
+    @Override
+    protected String parse(final String expression) {
+        return "parse('" + expression + "')";
     }
 
     public static void main(final String... args) {
         new ExpressionTest(mode(args, ExpressionTest.class, "easy", "hard") == 1).test();
+    }
+
+    public static class ArithmeticLanguage extends Language {
+        public ArithmeticLanguage(final Dialect parsed, final Dialect unparsed, final Ops ops) {
+            super(parsed, unparsed, ops);
+            tests.addAll(list(
+                    constant(10),
+                    vx,
+                    vy,
+                    vz,
+                    b("+", vx, constant(2)),
+                    b("-", constant(3), vy),
+                    b("*", constant(4), vz),
+                    b("/", constant(5), vz),
+                    b("/", u("negate", vx), constant(2)),
+                    b("/", vx, b("*", vy, vz)),
+                    b("+", b("+", b("*", vx, vx), b("*", vy, vy)), b("*", vz, vz)),
+                    b("-", b("+", b("*", vx, vx), b("*", constant(5), b("*", vz, b("*", vz, vz)))), b("*", vy, constant(8)))
+            ));
+        }
     }
 }

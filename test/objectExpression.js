@@ -43,6 +43,7 @@ Variable.prototype.diff = function (p) {
     if (this.name == p) return new Const(1);
     return new Const(0);
 };
+Variable.prototype.prefix = Variable.prototype.toString;
 
 function Const(Value) {
     Object.defineProperties(this, {
@@ -58,6 +59,7 @@ Const.prototype.evaluate = function () {
 Const.prototype.diff = function () {
     return new Const(0);
 };
+Const.prototype.prefix = Const.prototype.toString;
 
 function Operation(op11, op22) {
     Object.defineProperties(this, {
@@ -75,6 +77,9 @@ var OpHelper = function (f, s) {
     };
     p.prototype.evaluate = function () {
         return f(this.op1.evaluate.apply(this.op1, arguments), this.op2 && this.op2.evaluate.apply(this.op2, arguments));
+    };
+    p.prototype.prefix = function () {
+        return "(" + s + " " + this.op1.prefix() + (this.op2 !== undefined ? (" " + this.op2.prefix() + ")") : ")");
     };
     return p;
 };
@@ -123,9 +128,9 @@ var binaryOperations = {
 };
 
 var unaryOperations = {
-    "negate": Negate,
-    "sin": Sin,
-    "cos": Cos
+    "negate": Negate
+    //"sin": Sin,
+    //"cos": Cos
 };
 
 function getNumPos(expression, i) {
@@ -159,19 +164,87 @@ function parse(expression) {
     return stack.pop();
 }
 
-/* var expr = new Subtract(
- new Multiply(
- new Const(2),
- new Variable("x")
- ),
- new Const(3)
- );*/
+function ParserError(message) {
+    this.name = "ParserError";
+    this.message = message;
+}
+ParserError.prototype = Error.prototype;
 
-/* var println = console.log;
- var simple = new Add(new Variable("x"),new Const(3));
+function isFullNumber(str) {
+    if (str.length == 0) return false;
+    for (var i = 0; i < str.length; i++) {
+        if (i == 0 && str[i] == '-' && str.length != 1) continue;
+        if (str[i] < '0' || str[i] > '9') return false;
+    }
+    return true;
+}
+
+function parsePrefix(expression) {
+    var pos = 0;
+    if (expression.length == 0) throw new ParserError("Empty String");
+    var moveNext = function () {
+        if (expression[pos] == '(' || expression[pos] == ')') {
+            pos++;
+            return;
+        }
+        while (expression[pos] != " " && expression[pos] != ')' && expression[pos] != '(' && pos < expression.length) {
+            pos++;
+        }
+    };
+    var skip = function () {
+        while (expression[pos] == " " && pos < expression.length) {
+            pos++;
+        }
+    };
+    var getToken = function () {
+        skip();
+        var oldPos = pos;
+        moveNext();
+        return expression.substring(oldPos, pos);
+    };
+    var inner = function () {
+        var expr;
+        var com = getToken();
+        if (com == '(') {
+            expr = inner();
+            if (expression[pos] != ')') throw new ParserError("Expected closing bracket at pos " + pos);
+            pos++;
+        } else if (isFullNumber(com)) {
+            expr = new Const(parseInt(com));
+        } else if (com == 'x' || com == 'y' || com == 'z') {
+            expr = new Variable(com);
+        } else if (com in binaryOperations) {
+            var op1 = inner();
+            var op2 = inner();
+            expr = new binaryOperations[com](op1, op2);
+            skip();
+            if (expression[pos] != ')' && pos < expression.length) throw new ParserError(com + " is a two-arguments function");
+        } else if (com in unaryOperations) {
+            op1 = inner();
+            expr = new unaryOperations[com](op1);
+            skip();
+            if (expression[pos] != ')' && pos < expression.length) throw new ParserError(com + " is a one-arguments function");
+        } else if (com == "") {
+            throw new ParserError("Empty token");
+        } else {
+            throw new ParserError("Unrecognized token " + com);
+        }
+        return expr;
+    };
+    var ans = inner();
+    skip();
+    if (pos != expression.length) throw new ParserError("String is invalid from pos " + pos);
+    return ans;
+}
+
+//var println = console.log;
+/*var simple = new Add(new Variable("x"),new Const(3));
  println(simple.toString());
  var e = new Add(new Const(3), new Const(5));
  println(e.toString());*/
 
 /* var e = parse("2 x + 10 -");
  println(parse(e.diff("x").toString()).evaluate(10));*/
+
+//println(parsePrefix("+ (* x 3) (/ 10 2)").evaluate(10));
+//println(parsePrefix("(+ x 2").evaluate(10));
