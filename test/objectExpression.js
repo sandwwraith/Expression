@@ -21,6 +21,8 @@ var negateOp = function (a) {
 
 var sinOp = Math.sin;
 var cosOp = Math.cos;
+var expOp = Math.exp;
+var atanOp = Math.atan;
 
 function Variable(name) {
     Object.defineProperty(this, "name", {value: name, enumerable: true});
@@ -120,6 +122,18 @@ Cos.prototype.diff = function (p) {
     return new Multiply(new Negate(new Sin(this.op1)), this.op1.diff(p));
 };
 
+var Exp = OpHelper(expOp, "exp");
+Exp.prototype.diff = function (p) {
+    return new Multiply(new Exp(this.op1), this.op1.diff(p));
+};
+
+var ArcTan = OpHelper(atanOp, "atan");
+ArcTan.prototype.diff = function (p) {
+    return new Divide(this.op1.diff(p), new Add(
+        new Const(1), new Multiply(this.op1, this.op1)
+    ))
+};
+
 var binaryOperations = {
     "+": Add,
     "-": Subtract,
@@ -128,9 +142,11 @@ var binaryOperations = {
 };
 
 var unaryOperations = {
-    "negate": Negate
-    //"sin": Sin,
-    //"cos": Cos
+    "negate": Negate,
+    "exp": Exp,
+    "atan": ArcTan,
+    "sin": Sin,
+    "cos": Cos
 };
 
 function getNumPos(expression, i) {
@@ -207,27 +223,26 @@ function parsePrefix(expression) {
         var com = getToken();
         if (com == '(') {
             expr = inner();
-            if (expression[pos] != ')') throw new ParserError("Expected closing bracket at pos " + pos);
+            if (expression[pos] != ')') throw new ParserError("Expected closing parenthesis at pos " + pos);
             pos++;
         } else if (isFullNumber(com)) {
             expr = new Const(parseInt(com));
         } else if (com == 'x' || com == 'y' || com == 'z') {
             expr = new Variable(com);
         } else if (com in binaryOperations) {
-            var op1 = inner();
-            var op2 = inner();
-            expr = new binaryOperations[com](op1, op2);
+            expr = new binaryOperations[com](inner(), inner());
             skip();
             if (expression[pos] != ')' && pos < expression.length) throw new ParserError(com + " is a two-arguments function");
         } else if (com in unaryOperations) {
-            op1 = inner();
-            expr = new unaryOperations[com](op1);
+            expr = new unaryOperations[com](inner());
             skip();
             if (expression[pos] != ')' && pos < expression.length) throw new ParserError(com + " is a one-arguments function");
         } else if (com == "") {
             throw new ParserError("Empty token");
+        } else if (com == ")") {
+            throw new ParserError("Unexpected closing parenthesis at pos " + pos);
         } else {
-            throw new ParserError("Unrecognized token " + com);
+            throw new ParserError("Unrecognized operation or variable " + com + " at position " + (pos - com.length));
         }
         return expr;
     };
@@ -247,4 +262,4 @@ function parsePrefix(expression) {
  println(parse(e.diff("x").toString()).evaluate(10));*/
 
 //println(parsePrefix("+ (* x 3) (/ 10 2)").evaluate(10));
-//println(parsePrefix("(+ x 2").evaluate(10));
+//println(parsePrefix("atan 0").evaluate(10));
