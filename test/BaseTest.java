@@ -89,7 +89,7 @@ public abstract class BaseTest<E extends Engine> {
         assertEquals(result.context, precision, result.value.doubleValue(), expected);
     }
 
-    private Expr<Double> generate(final double[] vars, final int depth) {
+    protected Expr<Double> generate(final double[] vars, final int depth) {
         if (depth == 0) {
             if (RNG.nextBoolean()) {
                 final int id = randomInt(3);
@@ -111,7 +111,7 @@ public abstract class BaseTest<E extends Engine> {
         }
     }
 
-    private Expr<Double> generateP(final double[] vars, final int depth) {
+    protected Expr<Double> generateP(final double[] vars, final int depth) {
         return generate(vars, randomInt(depth));
     }
 
@@ -128,16 +128,14 @@ public abstract class BaseTest<E extends Engine> {
 
         if (args.length == 0) {
             System.err.println("No arguments found");
-        } else {
+        } else
             if (args.length > 1) {
                 System.err.println("Only one argument expected, " + args.length + " found");
-            } else {
+            } else
                 if (Arrays.asList(modes).indexOf(args[0]) < 0) {
                     System.err.println("First argument should be one of: \"" + String.join("\", \"", modes) + "\", found: \"" + args[0] + "\"");
-                } else {
+        } else {
                     return Arrays.asList(modes).indexOf(args[0]);
-                }
-            }
         }
         System.err.println("Usage: java -ea " + type.getName() + " (" + String.join("|", modes) + ")");
         System.exit(0);

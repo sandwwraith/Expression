@@ -18,7 +18,7 @@ public class Language {
     protected final List<BaseTest.Expr<UnaryOperator<Double>>> unary = new ArrayList<>();
     protected final List<BaseTest.Expr<BinaryOperator<Double>>> binary = new ArrayList<>();
     private final Map<String, BaseTest.Expr<UnaryOperator<Double>>> us;
-    private final Map<String, BaseTest.Expr<BinaryOperator<Double>>> bs;
+    final Map<String, BaseTest.Expr<BinaryOperator<Double>>> bs;
 
     protected List<BaseTest.Expr<BaseTest.TExpr>> tests = new ArrayList<>();
 
@@ -82,16 +82,6 @@ public class Language {
         );
     }
 
-    protected BaseTest.Expr<BaseTest.TExpr> liftUnary(final BaseTest.Expr<UnaryOperator<Double>> op, final BaseTest.Expr<BaseTest.TExpr> a) {
-        final UnaryOperator<BaseTest.TExpr> t = q -> (x, y, z) -> op.answer.apply(q.evaluate(x, y, z));
-        return unary(expr(op.parsed, op.unparsed, t), a);
-    }
-
-    protected BaseTest.Expr<BaseTest.TExpr> liftBinary(final BaseTest.Expr<BinaryOperator<Double>> op, final BaseTest.Expr<BaseTest.TExpr> a, final BaseTest.Expr<BaseTest.TExpr> b) {
-        final BinaryOperator<BaseTest.TExpr> t = (q, r) -> (x, y, z) -> op.answer.apply(q.evaluate(x, y, z), r.evaluate(x, y, z));
-        return binary(expr(op.parsed, op.unparsed, t), a, b);
-    }
-
     protected BaseTest.Expr<BaseTest.TExpr> constant(final int value) {
         return constant(value, (x, y, z) -> value);
     }
@@ -114,11 +104,15 @@ public class Language {
 //    }
 
     protected BaseTest.Expr<BaseTest.TExpr> u(final String name, final BaseTest.Expr<BaseTest.TExpr> a) {
-        return liftUnary(us.get(name), a);
+        final BaseTest.Expr<UnaryOperator<Double>> op = us.get(name);
+        final UnaryOperator<BaseTest.TExpr> t = q -> (x, y, z) -> op.answer.apply(q.evaluate(x, y, z));
+        return unary(expr(op.parsed, op.unparsed, t), a);
     }
 
     protected BaseTest.Expr<BaseTest.TExpr> b(final String name, final BaseTest.Expr<BaseTest.TExpr> a, final BaseTest.Expr<BaseTest.TExpr> b) {
-        return liftBinary(bs.get(name), a, b);
+        final BaseTest.Expr<BinaryOperator<Double>> op = bs.get(name);
+        final BinaryOperator<BaseTest.TExpr> t = (q, r) -> (x, y, z) -> op.answer.apply(q.evaluate(x, y, z), r.evaluate(x, y, z));
+        return binary(expr(op.parsed, op.unparsed, t), a, b);
     }
 
     public static <T> BaseTest.Expr<T> expr(final String parsed, final String unparsed, final T answer) {
