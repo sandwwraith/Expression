@@ -3,6 +3,8 @@ package test;
 import clojure.java.api.Clojure;
 import clojure.lang.IFn;
 
+import java.util.Optional;
+
 /**
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)
  */
@@ -10,17 +12,24 @@ public class ClojureEngine implements Engine {
     public static final IFn HASH_MAP = Clojure.var("clojure.core", "hash-map");
     public static final IFn EVAL = Clojure.var("clojure.core", "eval");
 
+    private final Optional<IFn> evaluate;
+    private final IFn toString;
+    private final String evaluateString;
     private IFn parsed;
     private String expression;
 
-    public ClojureEngine(final String script) {
+    public ClojureEngine(final String script, final Optional<String> evaluate) {
         Clojure.var("clojure.core", "load-file").invoke(script);
+
+        this.evaluate = evaluate.map(n -> Clojure.var("clojure.core", n));
+        this.evaluateString = evaluate.map(s -> s + " ").orElse("");
+        this.toString = Clojure.var("clojure.core", "toString");
     }
 
-    private <T> Result<T> invoke(final IFn f, final Object arg, final Class<T> token, final String context) {
+    private <T> Result<T> invoke(final IFn f, final Object[] args, final Class<T> token, final String context) {
         final Object result;
         try {
-            result = f.invoke(arg);
+            result = args.length == 1 ? f.invoke(args[0]) : f.invoke(args[0], args[1]);
         } catch (final Throwable e) {
             throw new EngineException("No error expected in " + context, e);
         }
@@ -35,19 +44,23 @@ public class ClojureEngine implements Engine {
 
     @Override
     public void parse(final String expression) {
-        parsed = invoke(EVAL, Clojure.read(expression), IFn.class, expression).value;
+        parsed = invoke(EVAL, new Object[] {Clojure.read(expression)}, IFn.class, expression).value;
         this.expression = expression;
     }
 
     @Override
     public Result<Number> evaluate(final double[] vars) {
         final Object map = HASH_MAP.invoke("x", vars[0], "y", vars[1], "z", vars[2]);
-        final String context = String.format("(expr %s)\nwhere expr = %s", map, expression);
-        return invoke(parsed, map, Number.class, context);
+        final String context = String.format("(%sexpr %s)\nwhere expr = %s", evaluateString, map, expression);
+        if (evaluate.isPresent()) {
+            return invoke(evaluate.get(), new Object[] {parsed, map}, Number.class, context);
+        } else {
+            return invoke(parsed, new Object[] {map}, Number.class, context);
+        }
     }
 
     @Override
     public Result<String> parsedToString() {
-        throw new UnsupportedOperationException("parsedToString");
+        return invoke(toString, new Object[] {parsed}, String.class, String.format("(toString expr)\nwhere expr = %s", expression));
     }
 }

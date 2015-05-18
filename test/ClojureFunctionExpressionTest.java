@@ -3,6 +3,8 @@ package test;
 import expression.Util;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -14,12 +16,15 @@ import static test.Language.expr;
 /**
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)
  */
-public class ClojureFunctionExpressionTest extends BaseTest {
+public class ClojureFunctionExpressionTest extends BaseTest<ClojureEngine> {
     public static final Dialect UNPARSED = dialect("(variable \"%s\")", "(constant %s.0)", "(%s %s)", "(%s %s %s)");
     public static final Dialect PARSED = dialect("%s", "%s.0", "(%s %s)", "(%s %s %s)");
+    protected final boolean testMultiarg;
 
-    protected ClojureFunctionExpressionTest(final Language language, final boolean testMultiarg) {
-        super(new ClojureEngine("expression.clj"), language, true);
+    protected ClojureFunctionExpressionTest(final Language language, final boolean testMultiarg, final Optional<String> evaluate) {
+        super(new ClojureEngine("expression.clj", evaluate), language, true);
+        this.testMultiarg = testMultiarg;
+
         if (testMultiarg) {
             language.tests.addAll(Util.list(
                     m("+", language.vx, language.vy, language.vz),
@@ -31,32 +36,37 @@ public class ClojureFunctionExpressionTest extends BaseTest {
         }
     }
 
-    @Override
-    protected Expr<Double> generate(final double[] vars, final int depth) {
-        if (depth == 0 || randomInt(2) == 0) {
-            return super.generate(vars, depth);
-        }
-        @SuppressWarnings("unchecked")
-        final Expr<Double>[] as = (Expr<Double>[]) Stream.generate(() -> generateP(vars, depth)).limit(1 + randomInt(5)).toArray(Expr[]::new);
-        return m(random(language.bs.get("+"), language.bs.get("*")), as);
+    protected ClojureFunctionExpressionTest(final boolean testMultiarg) {
+        this(
+                new ExpressionTest.ArithmeticLanguage(UNPARSED, PARSED, ExpressionTest.OPS),
+                testMultiarg,
+                Optional.<String>empty()
+        );
     }
 
-    protected ClojureFunctionExpressionTest(final boolean testMultiarg) {
-        this(new ExpressionTest.ArithmeticLanguage(UNPARSED, PARSED, ExpressionTest.OPS), testMultiarg);
+    @Override
+    protected Expr<Double> generate(final double[] vars, final int depth) {
+        if (depth == 0 || randomInt(2) == 0 || !testMultiarg) {
+            return super.generate(vars, depth);
+        }
+        return m(
+                random(language.bs.get("+"), language.bs.get("*")),
+                Stream.generate(() -> generateP(vars, depth)).limit(1 + randomInt(5)).collect(Collectors.toList())
+        );
     }
 
     @SafeVarargs
     protected final Expr<TExpr> m(final String name, final Expr<TExpr>... as) {
         final Expr<BinaryOperator<Double>> op = language.bs.get(name);
         final BinaryOperator<TExpr> t = (q, r) -> (x, y, z) -> op.answer.apply(q.evaluate(x, y, z), r.evaluate(x, y, z));
-        return m(expr(op.parsed, op.unparsed, t), as);
+        return m(expr(op.parsed, op.unparsed, t), Arrays.asList(as));
     }
 
-    private <T> Expr<T> m(final Expr<BinaryOperator<T>> op, final Expr<T>[] as) {
+    private <T> Expr<T> m(final Expr<BinaryOperator<T>> op, final List<Expr<T>> as) {
         return expr(
-                "(" + op.parsed + " " + Arrays.stream(as).map(e -> e.parsed).collect(Collectors.joining(" ")) + ")",
-                "(" + op.unparsed + " " + Arrays.stream(as).map(e1 -> e1.unparsed).collect(Collectors.joining(" ")) + ")",
-                Arrays.stream(as).map(e2 -> e2.answer).reduce(op.answer).get()
+                "(" + op.parsed + " " + as.stream().map(e -> e.parsed).collect(Collectors.joining(" ")) + ")",
+                "(" + op.unparsed + " " + as.stream().map(e1 -> e1.unparsed).collect(Collectors.joining(" ")) + ")",
+                as.stream().map(e2 -> e2.answer).reduce(op.answer).get()
         );
     }
 
